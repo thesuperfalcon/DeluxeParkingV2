@@ -46,6 +46,9 @@ namespace DeluxeParkingV2
                     case 'j':
                         ShowAllParkedCars();
                         break;
+                    case 'k':
+                        ShowElectricOutlet();
+                        break;
                     case 't':
                         ShowAllFreeParkingSpots();
                         break;
@@ -67,6 +70,7 @@ namespace DeluxeParkingV2
             Console.WriteLine("H. Drive Car");
             Console.WriteLine("I. Insert ParkingHouse");
             Console.WriteLine("J. Show All Parked Cars");
+            Console.WriteLine("K. Show All Electric Outlets");
             Console.WriteLine("T. Test");
         }
 
@@ -101,9 +105,25 @@ namespace DeluxeParkingV2
             List<Models.ParkedCars> showCars = DatabaseDapper.ShowParkedCars();
             foreach(Models.ParkedCars car in showCars)
             {
-                Console.WriteLine($"{car.Id}\t{car.Plate}\t{car.Color}\t{car.HouseName}\t{car.ParkingSlot}\t{(car.ElectricOutlet == 0 ? "Yes" : "No")}");
+                Console.WriteLine($"{car.Id}\t{car.Plate}\t{car.Color}\t{car.HouseName}\t{car.ParkingSlot}\t{(car.ElectricOutlet == 1 ? "Yes" : "No")}");
             }
         }
+
+        private static void ShowElectricOutlet()
+        {
+            List<Models.SpotsElectricOutlet> showOutlet = DatabaseDapper.ShowElectricOutlet();
+            foreach(Models.SpotsElectricOutlet sp in showOutlet)
+            {
+                Console.WriteLine($"{sp.CityName}\t{sp.HouseName}: {sp.SlotNumber}");
+            }
+            Console.WriteLine();
+            List<Models.SpotsElectricOutlet> showTotalOutlets = DatabaseDapper.ShowElectricOutletTotal();
+            foreach(Models.SpotsElectricOutlet show in showTotalOutlets)
+            {
+                Console.WriteLine($"{show.CityName}: {show.TotalAmount}");
+            }
+        }
+
 
         private static void ShowAllFreeParkingSpots()
         {

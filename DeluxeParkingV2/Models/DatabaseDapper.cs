@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using System.Data.SqlClient;
+using System.Text.RegularExpressions;
 using static Dapper.SqlMapper;
 
 namespace DeluxeParkingV2.Models
@@ -71,7 +72,7 @@ namespace DeluxeParkingV2.Models
                 return connection.Execute(sql, car);
             }
         }
-        public static int InsertParkingHouse(Models.ParkingHouses parkingHouses, Models.ParkingSlots slots, int [] outletSlots)
+        public static int InsertParkingHouse(Models.ParkingHouses parkingHouses, Models.ParkingSlots slots, int[] outletSlots)
         {
             using (var connection = new SqlConnection(connString))
             {
@@ -82,16 +83,16 @@ namespace DeluxeParkingV2.Models
 
                 slots.ParkingHouseId = parkingHouseId;
 
-                string parkingSlotSql = $"INSERT INTO ParkingSlots(SlotNumber, ParkingHouseId, ElectricOutlet) VALUES (@SlotNumber, @ParkingHouseId)";
+                string parkingSlotSql = $"INSERT INTO ParkingSlots(SlotNumber, ParkingHouseId) VALUES (@SlotNumber, @ParkingHouseId)";
                 for (int i = 1; i <= slots.SlotNumber; i++)
                 {
-                   affectedRows += connection.Execute(parkingSlotSql, new { SlotNumber = i, ParkingHouseId = parkingHouseId});
+                    affectedRows += connection.Execute(parkingSlotSql, new { SlotNumber = i, ParkingHouseId = parkingHouseId });
                 }
 
                 string outletSql = "Update ParkingSlots SET ElectricOutlet = @OutletSlot WHERE SlotNumber = @SlotNumber AND ParkingHouseId = @ParkingHouseId";
-                for(int i = 1; i <= slots.SlotNumber;i++)
+                for (int i = 0; i < outletSlots.Length; i++)
                 {
-                    affectedRows += connection.Execute(outletSql, new { SlotNumber = i, ParkingHouseId = parkingHouseId, OutletSlot = (outletSlots[i] == 0 ? 0 : 1) });
+                    affectedRows += connection.Execute(outletSql, new { SlotNumber = i + 1, ParkingHouseId = parkingHouseId, OutletSlot = (outletSlots[i] == 0 ? 0 : 1) });
                 }
             }
 
@@ -216,6 +217,43 @@ namespace DeluxeParkingV2.Models
             using (var conn = new SqlConnection(connString))
             {
                 return showCars = conn.Query<Models.ParkedCars>(sql).ToList();
+            }
+        }
+        public static List<Models.SpotsElectricOutlet> ShowElectricOutlet() 
+        {
+            List<Models.SpotsElectricOutlet> showOutlet = new List<Models.SpotsElectricOutlet>();
+
+            string sql = @"SELECT
+						HouseName,
+                        C.CityName,
+                        STRING_AGG(SlotNumber,', ') WITHIN GROUP (ORDER BY SlotNumber) AS SlotNumber
+                        FROM ParkingSlots PS
+                        INNER JOIN ParkingHouses PH ON PS.ParkingHouseId = PH.Id
+                        INNER JOIN Cities C ON PH.CityId = C.Id
+                        WHERE ElectricOutlet = 1
+                        GROUP BY HouseName, CityName
+                        ORDER BY HouseName DESC;";
+            using (var conn = new SqlConnection(connString))
+            {
+                return showOutlet = conn.Query<Models.SpotsElectricOutlet>(sql).ToList();
+            }
+        }
+        public static List<Models.SpotsElectricOutlet> ShowElectricOutletTotal()
+        {
+            List<Models.SpotsElectricOutlet> showOutletTotal = new List<Models.SpotsElectricOutlet>();
+
+            string sql = @"SELECT
+                    C.CityName,
+                    COUNT(SlotNumber) AS TotalAmount
+                    FROM ParkingSlots PS
+                    INNER JOIN ParkingHouses PH ON PS.ParkingHouseId = PH.Id
+                    INNER JOIN Cities C ON PH.CityId = C.Id
+                    WHERE ElectricOutlet = 1
+                    GROUP BY CityName
+                    ;";
+            using (var conn = new SqlConnection(connString))
+            {
+                return showOutletTotal = conn.Query<Models.SpotsElectricOutlet>(sql).ToList();
             }
         }
     }
