@@ -79,21 +79,22 @@ namespace DeluxeParkingV2
             ShowAllFreeParkingSpots();
             Console.WriteLine();
             ShowCars();
-            Console.Write("CarId: ");
-            int carIdToPark = int.Parse(Console.ReadLine());
-            Console.Write("HouseId: ");
-            int houseIdToPark = int.Parse(Console.ReadLine());
-            Console.Write("SlotNumber: ");
-            int slotNumberToPark = int.Parse(Console.ReadLine());
+
+            int carIdToPark = GetIntegerInput("CarId");
+
+            int houseIdToPark = GetIntegerInput("HouseId");
+
+            int slotNumberToPark = GetIntegerInput("SlotNumber");
+
             int affectedRowsParkCar = DatabaseDapper.ParkCar(carIdToPark, houseIdToPark, slotNumberToPark);
         }
+
 
         private static void ShowFreeParkingSpots()
         {
             ShowCities();
-            Console.Write("CityId: ");
-            int cityId = int.Parse(Console.ReadLine());
-            List<Models.ParkingHouses> freeSlots = DatabaseDapper.FreeSpots(cityId);
+            int cityId = GetIntegerInput("CityId");
+            List <Models.ParkingHouses> freeSlots = DatabaseDapper.FreeSpots(cityId);
             foreach (Models.ParkingHouses freeSlot in freeSlots)
             {
                 Console.WriteLine($"{freeSlot.Id}\t{freeSlot.HouseName}\t{freeSlot.CityId}\t{freeSlot.SlotNumbers}");
@@ -124,7 +125,6 @@ namespace DeluxeParkingV2
             }
         }
 
-
         private static void ShowAllFreeParkingSpots()
         {
             List<Models.ParkingHouses> allFreeSlots = DatabaseDapper.AllFreeSpots();
@@ -136,8 +136,7 @@ namespace DeluxeParkingV2
         private static void DriveCar()
         {
             ShowCars();
-            Console.Write("CarId: ");
-            int carId = int.Parse(Console.ReadLine());
+            int carId = GetIntegerInput("CarId");
             int affectedRowsDriveCar = DatabaseDapper.CarDrive(carId);
         }
 
@@ -152,11 +151,12 @@ namespace DeluxeParkingV2
 
         private static void InsertCar()
         {
+            ShowCars();
             Models.Cars cars1 = new Models.Cars();
+            string plate = GenerateRegistrationNumber();
+            Console.WriteLine($"Plate: {plate}");
             Console.Write("Make: ");
             string make = Console.ReadLine();
-            Console.Write("Plate: ");
-            string plate = Console.ReadLine();
             Console.Write("Color: ");
             string color = Console.ReadLine();
             cars1.Make = make;
@@ -205,7 +205,7 @@ namespace DeluxeParkingV2
             Console.Write("Amount of slots: ");
             int slotsAmount = int.Parse(Console.ReadLine());
             Console.Write("How many slots with electric outlet: ");
-            int outletAmount = int.Parse(Console.ReadLine()); // 3
+            int outletAmount = int.Parse(Console.ReadLine());
             int[] outletSlots = new int[slotsAmount];
             for(int i = 1; i <= outletAmount; i++)
             {
@@ -217,6 +217,45 @@ namespace DeluxeParkingV2
             parkingHouse1.CityId = cityId;
             parkingSlot1.SlotNumber = slotsAmount;
             int affectedRows3 = DatabaseDapper.InsertParkingHouse(parkingHouse1, parkingSlot1, outletSlots);
+        }
+        private static int GetIntegerInput(string prompt)
+        {
+            int userInput;
+
+            while (true)
+            {
+                Console.Write(prompt + ": ");
+                string input = Console.ReadLine();
+
+                if (int.TryParse(input, out userInput))
+                {
+                    return userInput;
+                }
+                else
+                {
+                    Console.WriteLine("Invalid input. Please enter a valid numeric value.");
+                }
+            }
+        }
+        private static string GenerateRegistrationNumber()
+        {
+
+            Random rnd = new Random();
+
+            string registrationNumber = string.Empty;
+
+            for (int i = 0; i < 3; i++)
+            {
+                char randomLetter = (char)('A' + rnd.Next(0, 26));
+                registrationNumber += randomLetter;
+            }
+
+            for (int i = 0; i < 3; i++)
+            {
+                char randomNumber = (char)('0' + rnd.Next(0, 10));
+                registrationNumber += randomNumber;
+            }
+            return registrationNumber;
         }
     }
 }
